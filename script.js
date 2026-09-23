@@ -153,3 +153,28 @@
     if (e.key === 'ArrowRight') step(1);
   });
 })();
+
+// Header shrinks slightly once the page is scrolled
+(function () {
+  'use strict';
+  var header = document.querySelector('header.site-header');
+  if (!header) return;
+  function onScroll() { header.classList.toggle('is-scrolled', window.scrollY > 40); }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
+// Gentle fade-in as sections scroll into view
+(function () {
+  'use strict';
+  if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var targets = document.querySelectorAll('.home-section, .quickfacts-band, .main-col > section, .side-col .side-block');
+  if (!targets.length) return;
+  document.documentElement.classList.add('js');
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  targets.forEach(function (t) { t.classList.add('reveal'); io.observe(t); });
+})();
