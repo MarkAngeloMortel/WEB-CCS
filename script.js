@@ -154,14 +154,35 @@
   });
 })();
 
-// Header shrinks slightly once the page is scrolled
+// Header shrinks slightly once the page is scrolled.
+// Two thresholds (hysteresis) are used on purpose: shrinking the header makes
+// the page ~50-70px shorter, which nudges scrollY back down. With a single
+// threshold that nudge flips the header straight back and it flickers forever.
+// The gap between SHRINK_AT and EXPAND_AT must stay larger than that height change.
 (function () {
   'use strict';
   var header = document.querySelector('header.site-header');
   if (!header) return;
-  function onScroll() { header.classList.toggle('is-scrolled', window.scrollY > 40); }
+
+  var SHRINK_AT = 120;  // scroll down past this -> compact header
+  var EXPAND_AT = 10;   // scroll back up near the top -> full header
+  var compact = false;
+  var ticking = false;
+
+  function update() {
+    ticking = false;
+    var y = window.scrollY;
+    if (!compact && y > SHRINK_AT) compact = true;
+    else if (compact && y < EXPAND_AT) compact = false;
+    header.classList.toggle('is-scrolled', compact);
+  }
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(update);
+  }
   window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
+  update();
 })();
 
 // Gentle fade-in as sections scroll into view
